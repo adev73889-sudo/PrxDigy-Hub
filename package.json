@@ -1,1 +1,15 @@
 
+{
+  "name": "prxdigy-key-api",
+  "version": "1.0.0",
+  "main": "key-api.js",
+  "scripts": {
+    "start": "node key-api.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "crypto-js": "^4.2.0",
+    "nanoid": "^3.3.8",
+    "node-cron": "^3.0.3"
+  }
+}
