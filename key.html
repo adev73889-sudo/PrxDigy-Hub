@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrxDigy Hub — Key System</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #080608;
+    --surface:   #100d11;
+    --card:      #17131a;
+    --border:    #2a1f2e;
+    --red:       #cd2635;
+    --red2:      #f24852;
+    --red-glow:  rgba(205, 38, 53, 0.18);
+    --text:      #f0edf3;
+    --muted:     #7a7285;
+    --green:     #33d184;
+    --mono:      'Space Mono', monospace;
+    --sans:      'Space Grotesk', sans-serif;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Noise overlay ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Grid lines background ── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: 0.22;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Red corner accent ── */
+  .corner-accent {
+    position: fixed;
+    top: -180px;
+    right: -180px;
+    width: 420px;
+    height: 420px;
+    background: radial-gradient(circle, rgba(205,38,53,0.22) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 20px;
+    gap: 0;
+  }
+
+  /* ── Brand mark ── */
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 48px;
+  }
+
+  .brand-icon {
+    width: 48px;
+    height: 48px;
+    background: #2a0a0f;
+    border: 1px solid rgba(205,38,53,0.5);
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--red2);
+    letter-spacing: -1px;
+  }
+
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .brand-eyebrow {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    color: var(--red2);
+    text-transform: uppercase;
+  }
+
+  .brand-name {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  /* ── Main card ── */
+  .card {
+    width: 100%;
+    max-width: 480px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(205,38,53,0.6), transparent);
+  }
+
+  .card-title {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.4px;
+    margin-bottom: 6px;
+  }
+
+  .card-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+
+  /* ── Step flow indicator ── */
+  .steps {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 28px;
+  }
+
+  .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    flex: 1;
+  }
+
+  .step-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    display: grid;
+    place-items: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    transition: background 0.3s, border-color 0.3s, color 0.3s;
+  }
+
+  .step-dot.active {
+    background: var(--red-glow);
+    border-color: var(--red);
+    color: var(--red2);
+  }
+
+  .step-dot.done {
+    background: rgba(51,209,132,0.12);
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  .step-label {
+    font-size: 9px;
+    color: var(--muted);
+    text-align: center;
+    font-family: var(--mono);
+    letter-spacing: 0.05em;
+  }
+
+  .step-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+    margin-top: -16px;
+    transition: background 0.3s;
+  }
+
+  .step-line.done { background: rgba(51,209,132,0.35); }
+
+  /* ── Panels ── */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── HWID display ── */
+  .hwid-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .hwid-label {
+    font-size: 9px;
+    font-family: var(--mono);
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 3px;
+    text-transform: uppercase;
+  }
+
+  .hwid-val {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+    word-break: break-all;
+    line-height: 1.4;
+  }
+
+  .copy-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 5px 10px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: border-color 0.2s, color 0.2s;
+  }
+
+  .copy-btn:hover { border-color: var(--red); color: var(--red2); }
+
+  /* ── Captcha / verification ── */
+  .verify-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    user-select: none;
+  }
+
+  .verify-box:hover { border-color: rgba(205,38,53,0.45); background: #1a1219; }
+
+  .verify-box.verified { border-color: rgba(51,209,132,0.4); cursor: default; }
+
+  .verify-checkbox {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    transition: background 0.2s, border-color 0.2s;
+    font-size: 13px;
+  }
+
+  .verify-box.verified .verify-checkbox {
+    background: rgba(51,209,132,0.15);
+    border-color: var(--green);
+  }
+
+  .verify-text {
+    flex: 1;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .verify-box.verified .verify-text { color: var(--green); }
+
+  .verify-brand {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: #555;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Primary button ── */
+  .btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--red);
+    border: none;
+    border-radius: 11px;
+    color: #fff;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: -0.2px;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn:hover {
+    background: var(--red2);
+    box-shadow: 0 0 28px rgba(205,38,53,0.35);
+  }
+
+  .btn:active { transform: scale(0.985); }
+
+  .btn:disabled {
+    background: #2a1f2e;
+    color: var(--muted);
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    margin-top: 10px;
+  }
+
+  .btn-ghost:hover {
+    border-color: var(--red);
+    color: var(--red2);
+    background: var(--red-glow);
+    box-shadow: none;
+  }
+
+  /* ── Timer chip ── */
+  .timer-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(205,38,53,0.1);
+    border: 1px solid rgba(205,38,53,0.25);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--red2);
+    margin-bottom: 20px;
+  }
+
+  .timer-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--red2);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ── Key result box ── */
+  .key-result {
+    background: var(--surface);
+    border: 1px solid rgba(51,209,132,0.3);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  .key-result::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(51,209,132,0.5), transparent);
+  }
+
+  .key-row-label {
+    font-size: 9px;
+    font-family: var(--mono);
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .key-value {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--green);
+    word-break: break-all;
+    line-height: 1.55;
+    margin-bottom: 16px;
+  }
+
+  .key-meta {
+    display: flex;
+    gap: 16px;
+    margin-top: 4px;
+  }
+
+  .key-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+  }
+
+  .key-meta-val {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+  }
+
+  .key-meta-val.expire {
+    color: #e8a24f;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+  }
+
+  .info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .info-icon { flex-shrink: 0; font-size: 13px; margin-top: 1px; }
+
+  /* ── Alert ── */
+  .alert {
+    background: rgba(205,38,53,0.08);
+    border: 1px solid rgba(205,38,53,0.25);
+    border-radius: 9px;
+    padding: 11px 14px;
+    font-size: 12px;
+    color: #e07077;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .alert.show { display: block; }
+
+  /* ── Loading shimmer ── */
+  .shimmer {
+    background: linear-gradient(90deg, var(--surface) 25%, #201c24 50%, var(--surface) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: 6px;
+    height: 14px;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: 32px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: #383040;
+    letter-spacing: 0.08em;
+    text-align: center;
+  }
+
+  /* ── Linkvertise redirect notice ── */
+  .lv-notice {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+  }
+
+  .lv-notice-title {
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .lv-notice-body {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--red);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.1s linear;
+  }
+
+  @media (max-width: 520px) {
+    .card { padding: 28px 20px; }
+    .brand { margin-bottom: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="corner-accent"></div>
+
+<div class="wrapper">
+
+  <div class="brand">
+    <div class="brand-icon">PX</div>
+    <div class="brand-text">
+      <div class="brand-eyebrow">PRXDIGY / KEY SYSTEM</div>
+      <div class="brand-name">PrxDigy Hub</div>
+    </div>
+  </div>
+
+  <div class="card">
+
+    <!-- Step indicator -->
+    <div class="steps" id="steps">
+      <div class="step">
+        <div class="step-dot active" id="dot1">1</div>
+        <div class="step-label">Verify</div>
+      </div>
+      <div class="step-line" id="line1"></div>
+      <div class="step">
+        <div class="step-dot" id="dot2">2</div>
+        <div class="step-label">Complete</div>
+      </div>
+      <div class="step-line" id="line2"></div>
+      <div class="step">
+        <div class="step-dot" id="dot3">3</div>
+        <div class="step-label">Your Key</div>
+      </div>
+    </div>
+
+    <!-- Panel 1: Start / Verify human -->
+    <div class="panel active" id="panel1">
+      <div class="card-title">Get Your Key</div>
+      <div class="card-sub">One key per device. Valid for 24 hours. Complete verification to proceed.</div>
+
+      <div class="hwid-box">
+        <div>
+          <div class="hwid-label">Your Device ID (HWID)</div>
+          <div class="hwid-val" id="hwid-display">Generating…</div>
+        </div>
+        <button class="copy-btn" onclick="copyHwid()">Copy</button>
+      </div>
+
+      <div class="verify-box" id="verify-box" onclick="triggerVerify()">
+        <div class="verify-checkbox" id="verify-check">☐</div>
+        <div class="verify-text" id="verify-text">I am not a robot</div>
+        <div class="verify-brand">PrxDigy<br>PROTECT</div>
+      </div>
+
+      <div class="alert" id="alert1">Please complete the verification above before continuing.</div>
+
+      <button class="btn" id="btn-continue" onclick="startLinkvertise()">Get Key via Linkvertise</button>
+    </div>
+
+    <!-- Panel 2: Linkvertise redirect in progress -->
+    <div class="panel" id="panel2">
+      <div class="card-title">Complete the Steps</div>
+      <div class="card-sub">A Linkvertise page opened in a new tab. Complete it fully — ad-skipping voids the key.</div>
+
+      <div class="lv-notice">
+        <div class="lv-notice-title">⏳ Waiting for Linkvertise…</div>
+        <div class="lv-notice-body">
+          Finish all steps on the Linkvertise page.<br>
+          When done, you'll be redirected back here automatically.
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
+
+      <div id="timer-chip" class="timer-chip">
+        <div class="timer-dot"></div>
+        <span id="lv-countdown">Waiting — 120s remaining</span>
+      </div>
+
+      <div class="info-row">
+        <div class="info-icon">⚠</div>
+        <div>Do not close this tab. If Linkvertise closes without redirecting, the session will reset.</div>
+      </div>
+
+      <div class="alert show" id="alert2" style="display:none;"></div>
+
+      <button class="btn btn-ghost" onclick="resetFlow()">Start Over</button>
+    </div>
+
+    <!-- Panel 3: Key delivered -->
+    <div class="panel" id="panel3">
+      <div class="card-title">Key Generated</div>
+      <div class="card-sub">HWID-locked to your device. Valid for 24 hours. Copy it into the hub.</div>
+
+      <div class="key-result">
+        <div class="key-row-label">Your Key</div>
+        <div class="key-value" id="key-display">—</div>
+
+        <div class="key-meta">
+          <div class="key-meta-item">
+            <div class="key-row-label">Expires</div>
+            <div class="key-meta-val expire" id="key-expire">—</div>
+          </div>
+          <div class="key-meta-item">
+            <div class="key-row-label">Device</div>
+            <div class="key-meta-val" id="key-hwid-short">—</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn" onclick="copyKey()" id="copy-key-btn">Copy Key</button>
+
+      <div class="divider"></div>
+
+      <div class="info-row">
+        <div class="info-icon">🔒</div>
+        <div>This key is locked to your device ID and cannot be shared. Running it on a different machine voids it.</div>
+      </div>
+      <div class="info-row">
+        <div class="info-icon">🔄</div>
+        <div>After 24 hours, return here and complete Linkvertise again to get a new key.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">PRXDIGY HUB  ·  KEY SYSTEM  ·  v2.0</div>
+
+</div>
+
+<script>
+// ────────────────────────────────────────────────
+// CONFIGURATION — point this at your key API
+// ────────────────────────────────────────────────
+const API_BASE        = 'https://YOUR-KEY-API.com';   // <-- swap in your API domain
+const LINKVERTISE_URL = 'https://linkvertise.com/YOUR-LINK/prxdigy-hub-key'; // <-- your LV link
+const KEY_DURATION_H  = 24; // hours
+
+// ────────────────────────────────────────────────
+// HWID generation — fingerprint-based, stable per browser profile
+// Intentionally not device-level hardware: this runs in a browser.
+// The Lua client handles the real machine HWID lock.
+// ────────────────────────────────────────────────
+async function generateHWID() {
+  const parts = [
+    navigator.userAgent,
+    navigator.language,
+    screen.width + 'x' + screen.height + 'x' + screen.colorDepth,
+    Intl.DateTimeFormat().resolvedOptions().timeZone,
+    navigator.hardwareConcurrency || 0,
+    navigator.platform || 'unknown',
+  ];
+
+  try {
+    // Canvas fingerprint
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.textBaseline = 'top';
+    ctx.font = '14px Arial';
+    ctx.fillStyle = '#f60';
+    ctx.fillRect(125, 1, 62, 20);
+    ctx.fillStyle = '#069';
+    ctx.fillText('PrxDIGY🔑', 2, 15);
+    ctx.fillStyle = 'rgba(102,204,0,0.7)';
+    ctx.fillText('PrxDIGY🔑', 4, 17);
+    parts.push(canvas.toDataURL().slice(-80));
+  } catch (e) {}
+
+  // Crypto hash
+  const raw = parts.join('|');
+  const encoded = new TextEncoder().encode(raw);
+  const buf = await crypto.subtle.digest('SHA-256', encoded);
+  const arr = Array.from(new Uint8Array(buf));
+  const hex = arr.map(b => b.toString(16).padStart(2, '0')).join('');
+  // Format as PRXDIGY-XXXX-XXXX-XXXX-XXXX
+  return 'HWID-' + [hex.slice(0,8), hex.slice(8,16), hex.slice(16,24), hex.slice(24,32)].join('-').toUpperCase();
+}
+
+// ────────────────────────────────────────────────
+// State
+// ────────────────────────────────────────────────
+let currentHWID = '';
+let humanVerified = false;
+let lvSessionToken = '';
+let lvCountdownInterval = null;
+let lvPollInterval = null;
+
+// ────────────────────────────────────────────────
+// Init
+// ────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  currentHWID = await generateHWID();
+  document.getElementById('hwid-display').textContent = currentHWID;
+
+  // Check if returning from Linkvertise (url has ?lv_token=...)
+  const params = new URLSearchParams(location.search);
+  const token = params.get('lv_token');
+  if (token) {
+    lvSessionToken = token;
+    history.replaceState({}, '', location.pathname);
+    showPanel(2);
+    finalizeLinkvertise(token);
+  }
+});
+
+// ────────────────────────────────────────────────
+// Human verification (lightweight proof-of-work)
+// ────────────────────────────────────────────────
+let verifyClicked = false;
+function triggerVerify() {
+  if (humanVerified) return;
+  const box = document.getElementById('verify-box');
+  const check = document.getElementById('verify-check');
+  const text = document.getElementById('verify-text');
+
+  // Simple timing PoW: user must have been on page for at least 1.5s
+  if (performance.now() < 1500) {
+    check.textContent = '⟳';
+    text.textContent = 'Loading verification…';
+    setTimeout(() => triggerVerify(), 1500 - performance.now() + 200);
+    return;
+  }
+
+  box.classList.add('verified');
+  check.textContent = '✓';
+  text.textContent = 'Human verified';
+  humanVerified = true;
+  document.getElementById('alert1').classList.remove('show');
+}
+
+// ────────────────────────────────────────────────
+// Step 1 → 2: Open Linkvertise
+// ────────────────────────────────────────────────
+async function startLinkvertise() {
+  if (!humanVerified) {
+    document.getElementById('alert1').classList.add('show');
+    return;
+  }
+
+  // Request a one-time session token from the API
+  // This token is tied to the HWID and expires in 10 minutes
+  let sessionData;
+  try {
+    const res = await fetch(`${API_BASE}/api/session/create`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hwid: currentHWID })
+    });
+    if (!res.ok) throw new Error('server');
+    sessionData = await res.json();
+  } catch (e) {
+    // Demo mode: generate a local token so the UI still flows
+    sessionData = { token: 'DEMO-' + crypto.randomUUID().replace(/-/g,'').slice(0,20).toUpperCase() };
+  }
+
+  lvSessionToken = sessionData.token;
+
+  // Encode HWID + token in the Linkvertise callback URL
+  const callbackUrl = encodeURIComponent(
+    `${location.origin}${location.pathname}?lv_token=${lvSessionToken}&hwid=${encodeURIComponent(currentHWID)}`
+  );
+  const lvUrl = `${LINKVERTISE_URL}?r=${callbackUrl}`;
+
+  showPanel(2);
+  startLVCountdown();
+  window.open(lvUrl, '_blank');
+}
+
+// ────────────────────────────────────────────────
+// Linkvertise countdown + poll
+// ────────────────────────────────────────────────
+function startLVCountdown() {
+  let remaining = 120;
+  const fill = document.getElementById('progress-fill');
+  const label = document.getElementById('lv-countdown');
+
+  lvCountdownInterval = setInterval(() => {
+    remaining--;
+    fill.style.width = ((120 - remaining) / 120 * 100) + '%';
+    label.textContent = `Waiting — ${remaining}s remaining`;
+
+    if (remaining <= 0) {
+      clearInterval(lvCountdownInterval);
+      showAlert2('Linkvertise timed out. Please start over.');
+    }
+  }, 1000);
+
+  // Poll the API for completion every 3 seconds
+  lvPollInterval = setInterval(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/session/status?token=${lvSessionToken}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.completed) {
+          clearInterval(lvPollInterval);
+          clearInterval(lvCountdownInterval);
+          deliverKey(data.key, data.expires_at);
+        }
+      }
+    } catch (e) { /* network hiccup, keep polling */ }
+  }, 3000);
+}
+
+// ────────────────────────────────────────────────
+// Return from Linkvertise: finalize the key
+// ────────────────────────────────────────────────
+async function finalizeLinkvertise(token) {
+  startLVCountdown();
+  // Token was just completed; fetch key immediately
+  try {
+    const res = await fetch(`${API_BASE}/api/key/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, hwid: currentHWID })
+    });
+    if (!res.ok) throw new Error('generate failed');
+    const data = await res.json();
+    clearInterval(lvCountdownInterval);
+    clearInterval(lvPollInterval);
+    deliverKey(data.key, data.expires_at);
+  } catch (e) {
+    // Demo mode
+    const demoKey = 'PRXDIGY-' + [
+      Math.random().toString(36).slice(2,6).toUpperCase(),
+      Math.random().toString(36).slice(2,6).toUpperCase(),
+      Math.random().toString(36).slice(2,6).toUpperCase(),
+      Math.random().toString(36).slice(2,6).toUpperCase(),
+    ].join('-');
+    const exp = new Date(Date.now() + KEY_DURATION_H * 3600 * 1000).toISOString();
+    clearInterval(lvCountdownInterval);
+    clearInterval(lvPollInterval);
+    deliverKey(demoKey, exp);
+  }
+}
+
+// ────────────────────────────────────────────────
+// Step 3: Show the key
+// ────────────────────────────────────────────────
+function deliverKey(key, expiresAt) {
+  const expDate = new Date(expiresAt);
+  const expStr  = expDate.toLocaleString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: true
+  });
+
+  document.getElementById('key-display').textContent = key;
+  document.getElementById('key-expire').textContent = expStr;
+  document.getElementById('key-hwid-short').textContent =
+    currentHWID.slice(0, 17) + '…';
+
+  showPanel(3);
+}
+
+// ────────────────────────────────────────────────
+// UI helpers
+// ────────────────────────────────────────────────
+function showPanel(n) {
+  ['panel1','panel2','panel3'].forEach((id, i) => {
+    document.getElementById(id).classList.toggle('active', i + 1 === n);
+  });
+
+  // Dots
+  for (let i = 1; i <= 3; i++) {
+    const dot = document.getElementById('dot' + i);
+    dot.classList.remove('active','done');
+    if (i < n) dot.classList.add('done'), dot.textContent = '✓';
+    else if (i === n) dot.classList.add('active'), dot.textContent = i;
+    else dot.textContent = i;
+  }
+
+  // Lines
+  for (let i = 1; i <= 2; i++) {
+    const line = document.getElementById('line' + i);
+    line.classList.toggle('done', i < n);
+  }
+}
+
+function showAlert2(msg) {
+  const a = document.getElementById('alert2');
+  a.textContent = msg;
+  a.style.display = 'block';
+}
+
+function resetFlow() {
+  clearInterval(lvCountdownInterval);
+  clearInterval(lvPollInterval);
+  humanVerified = false;
+  lvSessionToken = '';
+
+  const box = document.getElementById('verify-box');
+  const check = document.getElementById('verify-check');
+  const text = document.getElementById('verify-text');
+  box.classList.remove('verified');
+  check.textContent = '☐';
+  text.textContent = 'I am not a robot';
+  document.getElementById('alert1').classList.remove('show');
+  document.getElementById('alert2').style.display = 'none';
+  document.getElementById('progress-fill').style.width = '0%';
+
+  showPanel(1);
+}
+
+async function copyHwid() {
+  try {
+    await navigator.clipboard.writeText(currentHWID);
+    const btn = document.querySelector('.copy-btn');
+    const orig = btn.textContent;
+    btn.textContent = 'Copied';
+    setTimeout(() => { btn.textContent = orig; }, 1400);
+  } catch(e) {}
+}
+
+async function copyKey() {
+  const key = document.getElementById('key-display').textContent;
+  try {
+    await navigator.clipboard.writeText(key);
+    const btn = document.getElementById('copy-key-btn');
+    btn.textContent = '✓ Copied to clipboard';
+    setTimeout(() => { btn.textContent = 'Copy Key'; }, 2000);
+  } catch(e) {}
+}
+</script>
+</body>
+</html>
